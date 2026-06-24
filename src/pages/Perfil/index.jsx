@@ -14,6 +14,22 @@ function Perfil() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState('cart')
   const [orderId, setOrderId] = useState(null)
+  const [deliveryData, setDeliveryData] = useState({
+    receiver: '',
+    address: '',
+    city: '',
+    zipCode: '',
+    number: '',
+    complement: ''
+  })
+
+  const [paymentData, setPaymentData] = useState({
+    cardName: '',
+    cardNumber: '',
+    cvv: '',
+    month: '',
+    year: ''
+    })
   const { id } = useParams()
   const [restaurant, setRestaurant] = useState(null)
   useEffect(() => {
@@ -38,6 +54,36 @@ function Perfil() {
   setCheckoutStep('cart')
 }
 
+function validateDelivery() {
+  if (
+    !deliveryData.receiver ||
+    !deliveryData.address ||
+    !deliveryData.city ||
+    !deliveryData.zipCode ||
+    !deliveryData.number
+  ) {
+    alert('Preencha todos os campos obrigatórios da entrega.')
+    return false
+  }
+
+  return true
+}
+
+function validatePayment() {
+  if (
+    !paymentData.cardName ||
+    !paymentData.cardNumber ||
+    !paymentData.cvv ||
+    !paymentData.month ||
+    !paymentData.year
+  ) {
+    alert('Preencha todos os campos obrigatórios do pagamento.')
+    return false
+  }
+
+  return true
+}
+
 function finishOrder() {
   const payload = {
     products: cartItems.map((item) => ({
@@ -45,23 +91,23 @@ function finishOrder() {
       price: item.preco
     })),
     delivery: {
-      receiver: 'Levi Santos',
+      receiver: deliveryData.receiver,
       address: {
-        description: 'Rua Teste',
-        city: 'Campinas',
-        zipCode: '13000000',
-        number: 123,
-        complement: 'Casa'
+        description: deliveryData.address,
+        city: deliveryData.city,
+        zipCode: deliveryData.zipCode,
+        number: Number(deliveryData.number),
+        complement: deliveryData.complement
       }
     },
     payment: {
       card: {
-        name: 'Levi Santos',
-        number: '1234567890123456',
-        code: 123,
+        name: paymentData.cardName,
+        number: paymentData.cardNumber,
+        code: Number(paymentData.cvv),
         expires: {
-          month: 12,
-          year: 2028
+          month: Number(paymentData.month),
+          year: Number(paymentData.year)
         }
       }
     }
@@ -70,13 +116,12 @@ function finishOrder() {
   api
     .post('/checkout', payload)
     .then((response) => {
-      console.log(response.data)
       setOrderId(response.data.orderId)
       setCheckoutStep('success')
     })
     .catch((error) => {
       console.log(error)
-      alert('Erro ao finalizar pedido. Veja o console.')
+      alert('Erro ao finalizar pedido. Verifique os dados e tente novamente.')
     })
 }
 
@@ -195,30 +240,90 @@ const total = cartItems.reduce(
                 <h3>Entrega</h3>
 
                 <label>Quem irá receber</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  value={deliveryData.receiver}
+                  onChange={(e) =>
+                    setDeliveryData({
+                      ...deliveryData,
+                      receiver: e.target.value
+                    })
+                  }
+                />
 
                 <label>Endereço</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  value={deliveryData.address}
+                  onChange={(e) =>
+                    setDeliveryData({
+                      ...deliveryData,
+                      address: e.target.value
+                    })
+                  }
+                />
 
                 <label>Cidade</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  value={deliveryData.city}
+                  onChange={(e) =>
+                    setDeliveryData({
+                      ...deliveryData,
+                      city: e.target.value
+                    })
+                  }
+                />
 
                 <S.Row>
                   <div>
                     <label>CEP</label>
-                    <input type="text" />
+                    <input
+                      type="text"
+                      value={deliveryData.zipCode}
+                      onChange={(e) =>
+                      setDeliveryData({
+                        ...deliveryData,
+                        zipCode: e.target.value.replace(/\D/g, '')
+                      })
+                    }
+                  />
                   </div>
 
                   <div>
                     <label>Número</label>
-                    <input type="text" />
+                    <input
+                      type="text"
+                      value={deliveryData.number}
+                      onChange={(e) =>
+                        setDeliveryData({
+                          ...deliveryData,
+                          number: e.target.value.replace(/\D/g, '')
+                        })
+                      }
+                    />
                   </div>
                 </S.Row>
 
                 <label>Complemento</label>
-                <input type="text" />
-
-                <S.CheckoutButton onClick={() => setCheckoutStep('payment')}>
+                  <input
+                type="text"
+                value={deliveryData.complement}
+                onChange={(e) =>
+                  setDeliveryData({
+                    ...deliveryData,
+                    complement: e.target.value
+                  })
+                }
+              />
+                
+                <S.CheckoutButton
+                  onClick={() => {
+                    if (validateDelivery()) {
+                      setCheckoutStep('payment')
+                    }
+                  }}
+                >
                   Continuar com o pagamento
                 </S.CheckoutButton>
 
@@ -239,27 +344,82 @@ const total = cartItems.reduce(
                 </h3>
 
                 <label>Nome no cartão</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  value={paymentData.cardName}
+                  onChange={(e) =>
+                    setPaymentData({
+                      ...paymentData,
+                      cardName: e.target.value
+                    })
+                  }
+                />
 
                 <label>Número do cartão</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  maxLength="16"
+                  value={paymentData.cardNumber}
+                  onChange={(e) =>
+                    setPaymentData({
+                      ...paymentData,
+                      cardNumber: e.target.value.replace(/\D/g, '')
+                    })
+                  }
+                />
 
                 <S.Row>
                   <div>
                     <label>CVV</label>
-                    <input type="text" />
+                    <input
+                      type="text"
+                      maxLength="3"
+                      value={paymentData.cvv}
+                      onChange={(e) =>
+                        setPaymentData({
+                          ...paymentData,
+                          cvv: e.target.value.replace(/\D/g, '')
+                        })
+                      }
+                    />
                   </div>
 
                   <div>
                     <label>Mês de vencimento</label>
-                    <input type="text" />
+                    <input
+                      type="text"
+                      maxLength="2"
+                      value={paymentData.month}
+                      onChange={(e) =>
+                        setPaymentData({
+                          ...paymentData,
+                          month: e.target.value.replace(/\D/g, '')
+                        })
+                      }
+                    />
                   </div>
                 </S.Row>
 
                 <label>Ano de vencimento</label>
-                <input type="text" />
+                <input
+                  type="text"
+                  maxLength="4"
+                  value={paymentData.year}
+                  onChange={(e) =>
+                    setPaymentData({
+                      ...paymentData,
+                      year: e.target.value.replace(/\D/g, '')
+                    })
+                  }
+                />
 
-                <S.CheckoutButton onClick={finishOrder}>
+                <S.CheckoutButton
+                  onClick={() => {
+                    if (validatePayment()) {
+                      finishOrder()
+                    }
+                  }}
+                >
                   Finalizar pagamento
                 </S.CheckoutButton>
 
