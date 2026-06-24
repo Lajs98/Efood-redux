@@ -13,6 +13,7 @@ function Perfil() {
   const cartItems = useSelector((state) => state.cart.items)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState('cart')
+  const [orderId, setOrderId] = useState(null)
   const { id } = useParams()
   const [restaurant, setRestaurant] = useState(null)
   useEffect(() => {
@@ -33,14 +34,56 @@ function Perfil() {
   }
 
   function closeCart() {
-    setIsCartOpen(false)
-    setCheckoutStep('cart')
+  setIsCartOpen(false)
+  setCheckoutStep('cart')
+}
+
+function finishOrder() {
+  const payload = {
+    products: cartItems.map((item) => ({
+      id: item.id,
+      price: item.preco
+    })),
+    delivery: {
+      receiver: 'Levi Santos',
+      address: {
+        description: 'Rua Teste',
+        city: 'Campinas',
+        zipCode: '13000000',
+        number: 123,
+        complement: 'Casa'
+      }
+    },
+    payment: {
+      card: {
+        name: 'Levi Santos',
+        number: '1234567890123456',
+        code: 123,
+        expires: {
+          month: 12,
+          year: 2028
+        }
+      }
+    }
   }
 
-  const total = cartItems.reduce(
-    (acc, item) => acc + item.preco,
-    0
-  )
+  api
+    .post('/checkout', payload)
+    .then((response) => {
+      console.log(response.data)
+      setOrderId(response.data.orderId)
+      setCheckoutStep('success')
+    })
+    .catch((error) => {
+      console.log(error)
+      alert('Erro ao finalizar pedido. Veja o console.')
+    })
+}
+
+const total = cartItems.reduce(
+  (acc, item) => acc + item.preco,
+  0
+)
 
   return (
     <>
@@ -216,7 +259,7 @@ function Perfil() {
                 <label>Ano de vencimento</label>
                 <input type="text" />
 
-                <S.CheckoutButton onClick={() => setCheckoutStep('success')}>
+                <S.CheckoutButton onClick={finishOrder}>
                   Finalizar pagamento
                 </S.CheckoutButton>
 
@@ -228,7 +271,7 @@ function Perfil() {
 
             {checkoutStep === 'success' && (
               <S.Success>
-                <h3>Pedido realizado - 123456</h3>
+                <h3>Pedido realizado - {orderId}</h3>
 
                 <p>
                   Estamos felizes em informar que seu pedido já está em processo
