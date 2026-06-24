@@ -434,6 +434,16 @@ const total = cartItems.reduce(
                 <h3>Pedido realizado - {orderId}</h3>
 
                 <p>
+                  Pedido realizado em nome de <strong>{deliveryData.receiver}</strong>.
+                </p>
+
+                <p>
+                  Entrega em: <strong>{deliveryData.address}, {deliveryData.number}</strong> -{' '}
+                  <strong>{deliveryData.city}</strong>, CEP{' '}
+                  <strong>{deliveryData.zipCode}</strong>.
+                </p>
+
+                <p>
                   Estamos felizes em informar que seu pedido já está em processo
                   de preparação e, em breve, será entregue no endereço fornecido.
                 </p>
